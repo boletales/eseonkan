@@ -13,7 +13,7 @@
 </head>
 <body>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0</span></div>
+  <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0　正答率：0%　平均回答時間：0秒</span></div>
   <div id="answer"></div>
   <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
 
@@ -27,7 +27,7 @@
       <li><input type="checkbox" id="opt_hard"><label for="opt_hard">(+8)短六度～(+11)長七度のみ出題</label></li>
       <!--li><input type="checkbox" id="opt_tone"><label for="opt_tone">音名とチューニングを表示</label></li-->
       <li><input type="checkbox" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
-      <li><a id="tweet">成績をツイートする</a></li>
+      <li><a id="tweet">挑戦中！（残り20問）</a></li>
     </ul>
   </div>
 
@@ -41,6 +41,12 @@
     let toneA_, toneB_, offset_;
     let total   = 0;
     let correct = 0;
+
+    let started = false;
+    let heared  = false;
+    let lastheared;
+    let times   = [];
+    let totaltime = 0;
 
     let opts = {
         hard: false
@@ -81,9 +87,11 @@
       b.type = "button";
       b.value = "(+" + diff + ") " + c;
       b.onclick = ()=>{
-        buttons.forEach(b => {b.style.backgroundColor = "#fff"});
-        b.style.backgroundColor = "#faa";
-        answer(diff);
+        if(heared){
+          buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+          b.style.backgroundColor = "#faa";
+          answer(diff);
+        }
       };
       b.style.backgroundColor = "#fff";
       return b;
@@ -138,15 +146,24 @@
         correct++;
       }
 
+      heared = false;
+      times.push(new Date().getTime() - lastheared);
+      totaltime += times[times.length-1]/1000;
+
       buttons[toneB - toneA - 1].style.backgroundColor = "#afa";
-      document.getElementById("info").innerText = correct + " / " + total;
+      document.getElementById("info").innerText = correct + " / " + total + "　" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
       //document.getElementById("info2").innerText = opts.tone ? " " + tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")" : "";
       document.getElementById("replay").value = tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")";
       document.getElementById("replay").disabled = false;
-      document.getElementById("tweet").href =
-        "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
-          "わたしはエセ相対音感ふるいおとしテストで"+total+"問中"+correct+"問に正解しました" + (optdata => optdata.length==0 ? "" : "（" + optdata.join("・") + "）")([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "\n"
-        ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
+
+      if(times.length < 20){
+        document.getElementById("tweet").innerText = "挑戦中（残り" +  (20-times.length) + "問　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
+      }else{
+        document.getElementById("tweet").href =
+          "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
+            "わたしはエセ相対音感ふるいおとしテストで、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + (optdata => optdata.length==0 ? "" : "　" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+          ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
+      }
       setQuestion();
     }
 
@@ -156,6 +173,14 @@
 
     function playQuestion(){
       reloadOpts();
+      if(!started){
+        setQuestion();
+        started = true;
+      }
+      if(!heared){
+        lastheared = new Date().getTime();
+        heared = true;
+      }
       buttons.forEach(b => {b.style.backgroundColor = "#fff"});
       setTimeout(()=>(playTone(toneA+offset)), 0);
       setTimeout(()=>(playTone(toneB+offset)), opts.chord ? 0 : 500);
