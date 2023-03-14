@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>エセ相対音感ふるいおとしテスト</title>
+  <style>
+    .twitter-share-button{
+      vertical-align: text-top
+    }
+  </style>
+</head>
+<body>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0</span></div>
+  <div id="answer"></div>
+  <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
+
+  <h2>エセ相対音感ふるいおとしテスト</h2>
+  <p>
+    Playボタンを押して、聞こえた二音の音程を回答してください。このテストでは絶対音感でズルができないように、チューニングが一問ごとに変更されます。
+  </p>
+
+  <div id="options">
+    <ul>
+      <li><input type="checkbox" id="opt_hard"><label for="opt_hard">(+8)短六度～(+11)長七度のみ出題</label></li>
+      <!--li><input type="checkbox" id="opt_tone"><label for="opt_tone">音名とチューニングを表示</label></li-->
+      <li><input type="checkbox" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
+      <li><a id="tweet">成績をツイートする</a></li>
+    </ul>
+  </div>
+
+  <script>
+    const ctx = new AudioContext();
+    let gainNode = ctx.createGain();
+    gainNode.connect(ctx.destination);
+    gainNode.gain.value = 0.1;
+
+    let toneA, toneB, offset;
+    let toneA_, toneB_, offset_;
+    let total   = 0;
+    let correct = 0;
+
+    let opts = {
+        hard: false
+      , chord: false
+    };
+
+    let tonename = [
+        "A"
+      , "A#"
+      , "B"
+      , "C"
+      , "C#"
+      , "D"
+      , "D#"
+      , "E"
+      , "F"
+      , "F#"
+      , "G"
+      , "G#"
+    ];
+
+    let buttons = [
+        "短二度"
+      , "長二度"
+      , "短三度"
+      , "長三度"
+      , "完全四度"
+      , "増四度"
+      , "完全五度" 
+      , "短六度"
+      , "長六度" 
+      , "短七度" 
+      , "長七度" 
+      , "八度"
+    ].map((c,i)=>{
+      let diff = i+1;
+      let b = document.createElement("input");
+      b.type = "button";
+      b.value = "(+" + diff + ") " + c;
+      b.onclick = ()=>{
+        buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+        b.style.backgroundColor = "#faa";
+        answer(diff);
+      };
+      b.style.backgroundColor = "#fff";
+      return b;
+    });
+
+    
+    buttons.forEach(b => document.getElementById("answer").appendChild(b));
+
+    //let info2 = document.createElement("span");
+    //info2.id = "info2";
+    //document.getElementById("answer").appendChild(info2);
+
+    let replay = document.createElement("input");
+    replay.type = "button";
+    replay.value = "復習";
+    replay.disabled = true;
+    replay.id = "replay";
+    replay.style.marginLeft = "10px";
+    replay.onclick = (()=>replayQuestion());
+    document.getElementById("answer").appendChild(replay);
+
+    setQuestion();
+
+    function reloadOpts(){
+      opts = {
+          hard:  document.getElementById("opt_hard").checked
+        //, tone:  document.getElementById("opt_tone").checked
+        , chord: document.getElementById("opt_chord").checked
+      }
+    }
+
+    function setQuestion(){
+      reloadOpts();
+      toneA_  = toneA;
+      toneB_  = toneB;
+      offset_ = offset;
+      toneA  = Math.floor(Math.random()*12);
+      toneB  = toneA + (opts.hard ? Math.floor(Math.random()*4)+8 : Math.floor(Math.random()*12)+1);
+      offset = Math.random() - 0.5;
+
+      if(opts.hard){
+        buttons.forEach((c,i)=>{if(8<=i+1 && i+1<=11){c.disabled = false;}else{c.disabled=true;}});
+      }else{
+        buttons.forEach((c,i)=>{c.disabled = false});
+      }
+    }
+
+    function answer(diff){
+      reloadOpts();
+      total++;
+      if(toneB - toneA == diff){
+        correct++;
+      }
+
+      buttons[toneB - toneA - 1].style.backgroundColor = "#afa";
+      document.getElementById("info").innerText = correct + " / " + total;
+      //document.getElementById("info2").innerText = opts.tone ? " " + tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")" : "";
+      document.getElementById("replay").value = tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")";
+      document.getElementById("replay").disabled = false;
+      document.getElementById("tweet").href =
+        "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
+          "わたしはエセ相対音感ふるいおとしテストで"+total+"問中"+correct+"問に正解しました" + (optdata => optdata.length==0 ? "" : "（" + optdata.join("・") + "）")([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "\n"
+        ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
+      setQuestion();
+    }
+
+    function toneToFreq(tone){
+      return 440 * (2 ** ((tone) / 12));
+    }
+
+    function playQuestion(){
+      reloadOpts();
+      buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+      setTimeout(()=>(playTone(toneA+offset)), 0);
+      setTimeout(()=>(playTone(toneB+offset)), opts.chord ? 0 : 500);
+    }
+
+    function replayQuestion(){
+      reloadOpts();
+      buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+      setTimeout(()=>(playTone(toneA_+offset_)), 0);
+      setTimeout(()=>(playTone(toneB_+offset_)), 500);
+      setTimeout(()=>(playTone(toneA_+offset_)), 1200);
+      setTimeout(()=>(playTone(toneB_+offset_)), 1200);
+    }
+
+
+    function playTone(tone){
+      let o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(toneToFreq(tone), ctx.currentTime);
+      o.connect(gainNode);
+      o.start();
+      setTimeout(()=>(o.stop()), 490);
+    }
+  </script>
+
+</body>
+</html>
