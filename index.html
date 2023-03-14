@@ -161,7 +161,7 @@
       }else{
         document.getElementById("tweet").href =
           "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
-            "わたしはエセ相対音感ふるいおとしテストで、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + (optdata => optdata.length==0 ? "" : "　" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+            "わたしはエセ相対音感ふるいおとしテストで、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
           ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
       }
       setQuestion();
