@@ -13,6 +13,7 @@
 </head>
 <body>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <script src="./tone.js" charset="utf-8"></script>
   <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0　正答率：0%　平均回答時間：0秒</span></div>
   <div id="answer"></div>
   <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
@@ -26,7 +27,8 @@
     <ul>
       <li><input type="checkbox" id="opt_hard"><label for="opt_hard">(+8)短六度～(+11)長七度のみ出題</label></li>
       <!--li><input type="checkbox" id="opt_tone"><label for="opt_tone">音名とチューニングを表示</label></li-->
-      <li><input type="radio" name="opt_seq" id="opt_rseq"><label for="opt_rseq">二音の順をランダムにする</label> <input type="radio" name="opt_seq" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
+      <li><input type="radio" name="opt_seq" id="opt_useq" checked><label for="opt_useq">低→高の順に鳴らす</label> <input type="radio" name="opt_seq" id="opt_rseq"><label for="opt_rseq">二音の順をランダムにする</label> <input type="radio" name="opt_seq" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
+      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" checked onclick="testInst();"><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B" onclick="testInst();"><label for="opt_instB">B</label></li>
       <li><a id="tweet">挑戦中！（残り20問）</a></li>
     </ul>
   </div>
@@ -59,6 +61,7 @@
           hard:  document.getElementById("opt_hard").checked
         , rseq:  document.getElementById("opt_rseq").checked
         , chord: document.getElementById("opt_chord").checked
+        , inst:  Array.from(document.getElementsByName("opt_inst")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
       }
     }
 
@@ -187,31 +190,34 @@
       }
       buttons.forEach(b => {b.style.backgroundColor = "#fff"});
       if(rev){
-        setTimeout(()=>(playTone(toneB+offset)), 0);
-        setTimeout(()=>(playTone(toneA+offset)), opts.chord ? 0 : 500);
+        setTimeout(()=>(playTone(toneB+offset, 490)), 0);
+        setTimeout(()=>(playTone(toneA+offset, 490)), opts.chord ? 0 : 500);
       }else{
-        setTimeout(()=>(playTone(toneA+offset)), 0);
-        setTimeout(()=>(playTone(toneB+offset)), opts.chord ? 0 : 500);
+        setTimeout(()=>(playTone(toneA+offset, 490)), 0);
+        setTimeout(()=>(playTone(toneB+offset, 490)), opts.chord ? 0 : 500);
       }
     }
 
     function replayQuestion(){
       reloadOpts();
       buttons.forEach(b => {b.style.backgroundColor = "#fff"});
-      setTimeout(()=>(playTone(toneA_+offset_)), 0);
-      setTimeout(()=>(playTone(toneB_+offset_)), 500);
-      setTimeout(()=>(playTone(toneA_+offset_)), 1200);
-      setTimeout(()=>(playTone(toneB_+offset_)), 1200);
+      setTimeout(()=>(playTone(toneA_+offset_, 490)), 0);
+      setTimeout(()=>(playTone(toneB_+offset_, 490)), 500);
+      setTimeout(()=>(playTone(toneA_+offset_, 490)), 1200);
+      setTimeout(()=>(playTone(toneB_+offset_, 490)), 1200);
     }
 
 
-    function playTone(tone){
-      let o = ctx.createOscillator();
-      o.type = "sine";
-      o.frequency.setValueAtTime(toneToFreq(tone), ctx.currentTime);
-      o.connect(gainNode);
+
+    function playTone(tone, length){
+      let o = ocillator[opts.inst](tone, length);
       o.start();
-      setTimeout(()=>(o.stop()), 490);
+      setTimeout(()=>(o.stop()), length);
+    }
+
+    function testInst(){
+      reloadOpts();
+      playTone(Math.random()*12, 300);
     }
   </script>
 
