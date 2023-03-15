@@ -13,7 +13,6 @@
 </head>
 <body>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script src="./tone.js" charset="utf-8"></script>
   <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0　正答率：0%　平均回答時間：0秒</span></div>
   <div id="answer"></div>
   <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
@@ -32,12 +31,14 @@
       <li><a id="tweet">挑戦中！（残り20問）</a></li>
     </ul>
   </div>
-
   <script>
     const ctx = new AudioContext();
     let gainNode = ctx.createGain();
     gainNode.connect(ctx.destination);
     gainNode.gain.value = 0.1;
+  </script>  
+  <script src="./tone.js" charset="utf-8"></script>
+  <script>
 
     let toneA, toneB, offset, rev;
     let toneA_, toneB_, offset_;
