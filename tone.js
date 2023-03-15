@@ -1,13 +1,17 @@
+const ctx = new AudioContext();
+let gainNode = ctx.createGain();
+gainNode.connect(ctx.destination);
+gainNode.gain.value = 0.1;
 
-  let wave = {
-    sine : ctx.createPeriodicWave(
-        [0,1]
-      ,[0,0]
-    )
-  , test : ctx.createPeriodicWave(
-        [0,120,48,12,2,1,1]
-      ,[0,  0, 0, 0,0,0,1]
-    )
+let wave = {
+  sine : ctx.createPeriodicWave(
+     [0,1]
+    ,[0,0]
+  )
+, test : ctx.createPeriodicWave(
+     [0,120,48,12,2,1,1]
+    ,[0,  0, 0, 0,0,0,1]
+  )
 };
 let gain = {
     default : (length)=>{

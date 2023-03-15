@@ -31,12 +31,12 @@
       <li><a id="tweet">挑戦中！（残り20問）</a></li>
     </ul>
   </div>
-  <script>
-    const ctx = new AudioContext();
-    let gainNode = ctx.createGain();
-    gainNode.connect(ctx.destination);
-    gainNode.gain.value = 0.1;
-  </script>  
+
+  <h2>ほかのおもちゃ</h2>
+  <ul>
+    <li><a>エセ相対音感ふるいおとしテスト</a></li>
+    <li><a href="./pitch.html">音叉人間養成ギプス</a></li>
+  </ul>
   <script src="./tone.js" charset="utf-8"></script>
   <script>
 
@@ -52,7 +52,8 @@
     let totaltime = 0;
 
     let opts = {
-        hard: false
+        inst:  "A"
+      , hard: false
       , rseq: false
       , chord: false
     };

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音叉人間養成ギプス</title>
+  <style>
+    .range{
+      vertical-align: text-bottom;
+    }
+  </style>
+</head>
+<body>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0　正答率：0%　平均回答時間：0秒</span></div>
+  <div id="answer">粗動ねじ：<input type="range" class="range" id="answer_big" oninput="changeNote();"> 微動ねじ：<input type="range" class="range" id="answer_small" oninput="changeNote();"><input type="button" id="answer_button" value="A (+0 cents)" onclick="answer();"></div>
+  <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
+
+  <h2>音叉人間養成ギプス</h2>
+  <p>
+    Playボタンを押して、聞こえた音の音高をA=440Hz・12平均律を基準にして回答してください。
+  </p>
+
+  <div id="options">
+    <ul>
+      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" checked onclick="testInst();"><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B" onclick="testInst();"><label for="opt_instB">B</label></li>
+      <li><a id="tweet">挑戦中！（残り20問）</a></li>
+    </ul>
+  </div>
+
+  <h2>ほかのおもちゃ</h2>
+  <ul>
+    <li><a href="./">エセ相対音感ふるいおとしテスト</a></li>
+    <li><a>音叉人間養成ギプス</a></li>
+  </ul>
+
+  <script src="./tone.js" charset="utf-8"></script>
+  <script>
+    let tone;
+    let tone_;
+    let total = 0;
+    let diffs = [];
+    let sumdiff2 = 0;
+
+    let started = false;
+    let heared  = false;
+    let lastheared;
+    let times   = [];
+    let totaltime = 0;
+
+    let opts = {
+        inst:  "A"
+    };
+
+    function reloadOpts(){
+      opts = {
+          inst:  Array.from(document.getElementsByName("opt_inst")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
+      }
+    }
+
+    let tonename = [
+        "A"
+      , "A#"
+      , "B"
+      , "C"
+      , "C#"
+      , "D"
+      , "D#"
+      , "E"
+      , "F"
+      , "F#"
+      , "G"
+      , "G#"
+    ];
+
+    let replay = document.createElement("input");
+    replay.type = "button";
+    replay.value = "復習";
+    replay.disabled = true;
+    replay.id = "replay";
+    replay.style.marginLeft = "10px";
+    replay.onclick = (()=>replayQuestion());
+    document.getElementById("answer").appendChild(replay);
+
+    setQuestion();
+    changeNote();
+
+    function setQuestion(){
+      reloadOpts();
+      tone_  = tone;
+      tone   = Math.random()*13 - 0.5;
+    }
+
+    function changeNote(){
+      let n = parseInt(document.getElementById("answer_big").value)/100 * 12 + parseInt(document.getElementById("answer_small").value)/100 - 0.5;
+      if(heared || !started){
+        document.getElementById("answer_button").value = tonename[Math.round(n)%12] + " " + ((n-Math.round(n))<0 ? "-" : "+" ) + "" + Math.round(Math.abs(n-Math.round(n))*100) + " cents";
+      }
+      return n;
+    }
+    
+
+    function rate(diff){
+      let rate;
+      if(Math.abs(diff) > 50){
+        rate = "far...";
+      }else if(Math.abs(diff) > 25){
+        rate = "far";
+      }else if(Math.abs(diff) > 12){
+        rate = "near";
+      }else if(Math.abs(diff) > 6){
+        rate = "close";
+      }else if(Math.abs(diff) > 3){
+        rate = "very close!";
+      }else if(Math.abs(diff) > 0){
+        rate = "excellent!";
+      }else{
+        rate = "perfect!";
+      }
+      return rate + " (" + ((diff)<0 ? "-" : "+" ) + Math.abs(diff) + ")";
+    }
+
+    function answer(){
+      reloadOpts();
+      let answer = changeNote();
+      if(!heared){
+        replayQuestion();
+        return;
+      }
+
+      let diff = Math.round((answer - tone)*100);
+      if(600 < diff){
+        diff = diff - 1200;
+      }else if(diff < -600){
+        diff = diff + 1200;
+      }
+
+      total++;
+      diffs.push(Math.abs(diff));
+      sumdiff2 += (diff)**2;
+
+      heared = false;
+      times.push(new Date().getTime() - lastheared);
+      totaltime += times[times.length-1]/1000;
+
+      document.getElementById("info").innerText = "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
+      document.getElementById("answer_button").value = tonename[Math.round(tone)%12] + " " + ((tone-Math.round(tone))<0 ? "-" : "+" ) + "" + Math.round(Math.abs(tone-Math.round(tone))*100) + " cents" + ", " + rate(diff);
+
+      if(times.length < 20){
+        document.getElementById("tweet").innerText = "挑戦中（残り" +  (20-times.length) + "問　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
+      }else{
+        document.getElementById("tweet").innerText = "完了！（"+  "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
+        document.getElementById("tweet").href =
+          "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
+            "わたしは #音叉人間養成ギプス で、" +total+"問" + (totaltime.toFixed(2)) + "秒の間音叉のふりをしていました" + "（" + "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
+            + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+          ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2Fpitch.html";
+      }
+      setQuestion();
+    }
+
+    function toneToFreq(tone){
+      return 440 * (2 ** ((tone) / 12));
+    }
+
+    function playQuestion(){
+      reloadOpts();
+      if(!started){
+        setQuestion();
+        started = true;
+      }
+      if(!heared){
+        lastheared = new Date().getTime();
+        heared = true;
+      }
+      setTimeout(()=>(playTone(tone, 490)), 0);
+    }
+
+    function replayQuestion(){
+      reloadOpts();
+      setTimeout(()=>(playTone(tone_, 490)), 0);
+    }
+
+
+
+    function playTone(tone, length){
+      let o = ocillator[opts.inst](tone, length);
+      o.start();
+      setTimeout(()=>(o.stop()), length);
+    }
+
+    function testInst(){
+      reloadOpts();
+      playTone(Math.random()*12, 300);
+    }
+  </script>
+
+</body>
+</html>
