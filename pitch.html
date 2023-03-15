@@ -140,7 +140,7 @@
       times.push(new Date().getTime() - lastheared);
       totaltime += times[times.length-1]/1000;
 
-      document.getElementById("info").innerText = "(close+) " + (diffs.filter(d=>d<13).length) + "/" + total + "　" +"標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
+      document.getElementById("info").innerText = "(close+) " + (diffs.filter(d=>d<=12).length) + "/" + total + "　" +"標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
       document.getElementById("answer_button").value = tonename[Math.round(tone)%12] + " " + ((tone-Math.round(tone))<0 ? "-" : "+" ) + "" + Math.round(Math.abs(tone-Math.round(tone))*100) + " cents" + ", " + rate(diff);
 
       if(times.length < 10){
@@ -170,12 +170,12 @@
         lastheared = new Date().getTime();
         heared = true;
       }
-      setTimeout(()=>(playTone(tone, 490)), 0);
+      setTimeout(()=>(playTone(tone, 500)), 0);
     }
 
     function replayQuestion(){
       reloadOpts();
-      setTimeout(()=>(playTone(tone_, 490)), 0);
+      setTimeout(()=>(playTone(tone_, 500)), 0);
     }
 
 
@@ -183,7 +183,7 @@
     function playTone(tone, length){
       let o = ocillator[opts.inst](tone, length);
       o.start();
-      setTimeout(()=>(o.stop()), length);
+      setTimeout(()=>(o.stop()), length+100);
     }
 
     function testInst(){

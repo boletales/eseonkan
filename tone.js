@@ -17,7 +17,10 @@ let gain = {
     default : (length)=>{
       let g = ctx.createGain();
       g.connect(gainNode);
-      g.gain.setValueAtTime              (1.0 , ctx.currentTime);
+      g.gain.setValueAtTime              (0.0 , ctx.currentTime);
+      g.gain.linearRampToValueAtTime     (1.0 , ctx.currentTime + 0.006);
+      g.gain.linearRampToValueAtTime     (1.0 , ctx.currentTime + (length/1000));
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (length/1000) + 0.10);
       return g;
     }
   , natural : (length)=>{
@@ -26,8 +29,8 @@ let gain = {
       g.gain.setValueAtTime              (0.0 , ctx.currentTime);
       g.gain.linearRampToValueAtTime     (1.0 , ctx.currentTime + 0.006);
       g.gain.exponentialRampToValueAtTime(0.5 , ctx.currentTime + 0.02);
-      g.gain.linearRampToValueAtTime     (0.5 , ctx.currentTime + (length/1000) - 0.10);
-      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (length/1000));
+      g.gain.linearRampToValueAtTime     (0.5 , ctx.currentTime + (length/1000));
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (length/1000) + 0.10);
       return g;
     }
 };
