@@ -26,7 +26,7 @@
     <ul>
       <li><input type="checkbox" id="opt_hard"><label for="opt_hard">(+8)短六度～(+11)長七度のみ出題</label></li>
       <!--li><input type="checkbox" id="opt_tone"><label for="opt_tone">音名とチューニングを表示</label></li-->
-      <li><input type="checkbox" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
+      <li><input type="radio" name="opt_seq" id="opt_rseq"><label for="opt_rseq">二音の順をランダムにする</label> <input type="radio" name="opt_seq" id="opt_chord"><label for="opt_chord">二音を同時に鳴らす</label></li>
       <li><a id="tweet">挑戦中！（残り20問）</a></li>
     </ul>
   </div>
@@ -37,7 +37,7 @@
     gainNode.connect(ctx.destination);
     gainNode.gain.value = 0.1;
 
-    let toneA, toneB, offset;
+    let toneA, toneB, offset, rev;
     let toneA_, toneB_, offset_;
     let total   = 0;
     let correct = 0;
@@ -50,8 +50,17 @@
 
     let opts = {
         hard: false
+      , rseq: false
       , chord: false
     };
+
+    function reloadOpts(){
+      opts = {
+          hard:  document.getElementById("opt_hard").checked
+        , rseq:  document.getElementById("opt_rseq").checked
+        , chord: document.getElementById("opt_chord").checked
+      }
+    }
 
     let tonename = [
         "A"
@@ -115,14 +124,6 @@
 
     setQuestion();
 
-    function reloadOpts(){
-      opts = {
-          hard:  document.getElementById("opt_hard").checked
-        //, tone:  document.getElementById("opt_tone").checked
-        , chord: document.getElementById("opt_chord").checked
-      }
-    }
-
     function setQuestion(){
       reloadOpts();
       toneA_  = toneA;
@@ -131,6 +132,7 @@
       toneA  = Math.floor(Math.random()*12);
       toneB  = toneA + (opts.hard ? Math.floor(Math.random()*4)+8 : Math.floor(Math.random()*12)+1);
       offset = Math.random() - 0.5;
+      rev    = opts.rseq && Math.random() > 0.5;
 
       if(opts.hard){
         buttons.forEach((c,i)=>{if(8<=i+1 && i+1<=11){c.disabled = false;}else{c.disabled=true;}});
@@ -162,7 +164,8 @@
         document.getElementById("tweet").innerText = "完了！（"+  "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
         document.getElementById("tweet").href =
           "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
-            "わたしは #エセ相対音感ふるいおとしテスト で、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+            "わたしは #エセ相対音感ふるいおとしテスト で、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
+            + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.rseq, "順序ランダム"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
           ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
       }
       setQuestion();
@@ -183,8 +186,13 @@
         heared = true;
       }
       buttons.forEach(b => {b.style.backgroundColor = "#fff"});
-      setTimeout(()=>(playTone(toneA+offset)), 0);
-      setTimeout(()=>(playTone(toneB+offset)), opts.chord ? 0 : 500);
+      if(rev){
+        setTimeout(()=>(playTone(toneB+offset)), 0);
+        setTimeout(()=>(playTone(toneA+offset)), opts.chord ? 0 : 500);
+      }else{
+        setTimeout(()=>(playTone(toneA+offset)), 0);
+        setTimeout(()=>(playTone(toneB+offset)), opts.chord ? 0 : 500);
+      }
     }
 
     function replayQuestion(){
