@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="piano.css" rel="stylesheet">
   <title>音叉人間養成ギプス</title>
   <style>
     .range{
@@ -13,12 +14,20 @@
     #answer_button{
       font-size: 100%;
     }
+    #answer_button{
+      font-size: 100%;
+    }
   </style>
 </head>
 <body>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   <div id="infodiv"><span id="info" style="margin-right: 5px">(close+) 0/0　標準偏差：0.00cents　平均回答時間：0秒</span></div>
-  <div id="answer">粗動ねじ：<input type="range" class="range" id="answer_big" oninput="changeNote();" max="1200" min="0" step="1"> 微動ねじ：<input type="range" class="range" id="answer_small" oninput="changeNote();" max="100" min="0" step="1"><br><input type="button" id="answer_button" value="A (+0 cents)" onclick="answer();"></div>
+  <div id="answer">
+    <div id="piano_parent">
+    </div>
+  </div>
+    微調節：<input type="range" class="range" id="answer_small" oninput="changeNote();" min="-50" max="50" step="1">
+    <br><input type="button" id="answer_button" value="A (+0 cents)" onclick="answer();"></div>
   <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
 
   <h2>音叉人間養成ギプス</h2>
@@ -39,6 +48,7 @@
     <li><a>音叉人間養成ギプス</a></li>
   </ul>
 
+  <script src="./piano.js" charset="utf-8"></script>
   <script src="./tone.js" charset="utf-8"></script>
   <script>
     let tone;
@@ -78,6 +88,24 @@
       , "G#"
     ];
 
+    let selectedKey = 9;
+    let keys = generatePiano(
+        document.getElementById("piano_parent")
+      , 1
+      , (keyid, keys) => {
+        selectedKey = keyid;
+        keys.forEach((k, i) => {
+          if(i==keyid){
+            k.classList.add("selected_key");
+          }else{
+            k.classList.remove("selected_key");
+          }
+        });
+        changeNote();
+      }
+    );
+    keys[selectedKey].classList.add("selected_key");
+
 
     setQuestion();
     changeNote();
@@ -89,7 +117,7 @@
     }
 
     function changeNote(){
-      let n = parseInt(document.getElementById("answer_big").value)/100 + parseInt(document.getElementById("answer_small").value)/100 - 0.5;
+      let n = (selectedKey + 3) + parseInt(document.getElementById("answer_small").value)/100;
       if(heared || !started){
         document.getElementById("answer_button").value = "→ " + tonename[Math.round(n)%12] + " " + ((n-Math.round(n))<0 ? "-" : "+" ) + "" + Math.round(Math.abs(n-Math.round(n))*100) + " cents";
       }
@@ -115,6 +143,22 @@
         rate = "perfect!";
       }
       return rate + " (" + ((diff)<0 ? "-" : "+" ) + Math.abs(diff) + ")";
+    }
+
+    function ratejp(sigma){
+      if(Math.abs(sigma) > 50){
+        return "人間です。"
+      }else if(Math.abs(sigma) > 25){
+        return "まだ人間です。";
+      }else if(Math.abs(sigma) > 12){
+        return "やや音叉人間です。";
+      }else if(Math.abs(sigma) > 6){
+        return "音叉人間です。";
+      }else if(Math.abs(sigma) > 3){
+        return "音叉です。";
+      }else if(Math.abs(sigma) > 0){
+        return "高級音叉です。";
+      }
     }
 
     function answer(){
@@ -149,8 +193,8 @@
         document.getElementById("tweet").innerText = "完了！（"+  "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(2) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
         document.getElementById("tweet").href =
           "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
-            "わたしは #音叉人間養成ギプス で、 " + totaltime.toFixed(2) +"秒（"+ total + "問）、ずっと音叉のふりをしつづけていました" + "（" + "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(2) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
-            + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+            "わたしは" + ratejp(Math.sqrt(sumdiff2/total)) + "（" + "回答数：" +  total + "問" + "　" + "標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(2) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
+            + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([].filter(x=>x[0]).map(x=>x[1])) + "）" + " #音叉人間養成ギプス"+ "\n"
           ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2Fpitch.html";
       }
       setQuestion();

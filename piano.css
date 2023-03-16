@@ -1,0 +1,55 @@
+
+.piano{
+  display: flex;
+  margin: 5px;
+  width: fit-content;
+  transform-origin: top left;
+  font-size: 70%;
+}
+.octave_white{
+  width: fit-content;
+  margin-right: -1px;
+}
+.white_key{
+  width :  4em;
+  height: 24em;
+  border: solid black 1px;
+  margin-right: -1px;
+  background-color: #ffffff;
+}
+.black_key{
+  width :  3em;
+  height: 14em;
+  background-color: #201a10;
+}
+.white_key.selected_key{
+  background-color: #aaf;
+}
+.black_key.selected_key{
+  background-color: #00a;
+}
+.octave_white{
+  width: fit-content;
+  display: flex;
+}
+.octave_black{
+  display: flex;
+  margin-top: -24em;
+  margin-bottom: 10em;
+  margin-left: 1px;
+}
+.octave_black_inner{
+  margin-top: -1px;
+  display: flex;
+  justify-content: space-around;
+}
+.octave_black_ce{
+  flex: 5 3px;
+  margin-left : 1em;
+  margin-right: 1em;
+}
+.octave_black_fb{
+  flex: 7 3px;
+  margin-left : 1em;
+  margin-right: 1em;
+}
