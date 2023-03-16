@@ -45,7 +45,8 @@
   <h2>ほかのおもちゃ</h2>
   <ul>
     <li><a href="./">エセ相対音感ふるいおとしテスト</a></li>
-    <li><a>音叉人間養成ギプス</a></li>
+    <li><a href="./ex_rel.html">エセ相対音感ふるいおとしテストEX</a></li>
+    <li><a href="./pitch.html">音叉人間養成ギプス</a></li>
   </ul>
 
   <script src="./piano.js" charset="utf-8"></script>
@@ -184,7 +185,7 @@
       times.push(new Date().getTime() - lastheared);
       totaltime += times[times.length-1]/1000;
 
-      document.getElementById("info").innerText = "(close+) " + (diffs.filter(d=>d<=12).length) + "/" + total + "　" +"標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(0) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
+      document.getElementById("info").innerText = "(close+) " + (diffs.filter(d=>d<=12).length) + "/" + total + "　" +"標準偏差：" + Math.sqrt(sumdiff2/total).toFixed(2) + "cents" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
       document.getElementById("answer_button").value = tonename[Math.round(tone)%12] + " " + ((tone-Math.round(tone))<0 ? "-" : "+" ) + "" + Math.round(Math.abs(tone-Math.round(tone))*100) + " cents" + ", " + rate(diff);
 
       if(times.length < 10){
