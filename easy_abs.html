@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="piano.css" rel="stylesheet">
+  <title>絶対音感テスト</title>
+  <style>
+    .range{
+      vertical-align: text-bottom;
+      width: 30%;
+    }
+    #answer_button{
+      font-size: 100%;
+    }
+    #answer_button{
+      font-size: 100%;
+    }
+  </style>
+</head>
+<body>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <div id="infodiv"><span id="info" style="margin-right: 5px">0 / 0　正答率：0%　平均回答時間：0秒</span></div>
+  <div id="answer">
+    <div id="piano_parent">
+    </div>
+  </div>
+  <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
+
+  <h2>絶対音感テスト</h2>
+  <p>
+    Playボタンを押して、聞こえた音の音高を回答してください。
+  </p>
+
+  <div id="options">
+    <ul>
+      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" checked onclick="testInst();"><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B" onclick="testInst();"><label for="opt_instB">B</label></li>
+      <li><a id="tweet">挑戦中！（残り10問）</a></li>
+    </ul>
+  </div>
+
+  <h2>ほかのおもちゃ</h2>
+  <ul>
+    <li><a href="./">エセ相対音感ふるいおとしテスト</a></li>
+    <li><a href="./ex_rel.html">エセ相対音感ふるいおとしテストEX</a></li>
+    <li><a href="./pitch.html">音叉人間養成ギプス</a></li>
+  </ul>
+
+  <script src="./piano.js" charset="utf-8"></script>
+  <script src="./tone.js" charset="utf-8"></script>
+  <script>
+    let tone  = 0;
+    let tone_ = 0;
+    let total = 0;
+    let correct = 0;
+    let diffs = [];
+    let sumdiff2 = 0;
+
+    let started = false;
+    let heared  = false;
+    let lastheared;
+    let times   = [];
+    let totaltime = 0;
+
+    let opts = {
+        inst:  "A"
+    };
+
+    function reloadOpts(){
+      opts = {
+          inst:  Array.from(document.getElementsByName("opt_inst")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
+      }
+    }
+
+    let tonename = [
+        "A"
+      , "A#"
+      , "B"
+      , "C"
+      , "C#"
+      , "D"
+      , "D#"
+      , "E"
+      , "F"
+      , "F#"
+      , "G"
+      , "G#"
+    ];
+
+    let selectedKey = 9;
+    let keys = generatePiano(
+        document.getElementById("piano_parent")
+      , 2
+      , (keyid, keys) => {
+        selectedKey = keyid;
+        keys.forEach((k, i) => {
+          k.classList.remove("answer_key");
+          if(i==keyid){
+            k.classList.add("selected_key");
+          }else{
+            k.classList.remove("selected_key");
+          }
+        });
+        if(heared){
+          answer(keyid+3);
+        }
+      }
+    );
+
+    
+    let tones = [1,4,6,9,11];
+    
+    setQuestion();
+    function setQuestion(){
+      reloadOpts();
+      tone_  = tone;
+      while(Math.abs(tone-tone_)<5){
+        tone = Math.floor(Math.random()*2)*12 + tones[Math.floor(Math.random()*tones.length)];
+      }
+    }
+
+    function answer(answer){
+      reloadOpts();
+      if(!heared){
+        replayQuestion();
+        return;
+      }
+
+      
+      total++;
+      if(tone%12 == answer%12){
+        correct++;
+      }
+
+      heared = false;
+      times.push(new Date().getTime() - lastheared);
+      totaltime += times[times.length-1]/1000;
+
+      keys[(tone+9)%12].classList.add("answer_key");
+      keys[(tone+9)%12+12].classList.add("answer_key");
+      document.getElementById("info").innerText = correct + " / " + total + "　" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
+      //document.getElementById("info2").innerText = opts.tone ? " " + tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")" : "";
+
+      if(times.length < 20){
+        document.getElementById("tweet").innerText = "挑戦中（残り" +  (20-times.length) + "問　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
+      }else{
+        document.getElementById("tweet").innerText = "完了！（"+  "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
+        /*
+        document.getElementById("tweet").href =
+          "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
+            "わたしは #エセ相対音感ふるいおとしテスト で、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
+            + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([[opts.hard, "短六度～長七度限定"], [opts.rseq, "順序ランダム"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
+          ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2F";
+        */
+      }
+
+      setTimeout(()=>(playTone(tone+((answer-tone)%12-12)%12, 300)), 0);
+      setTimeout(()=>{
+        setQuestion();
+        playQuestion();
+      },700);
+    }
+
+    function toneToFreq(tone){
+      return 440 * (2 ** ((tone) / 12));
+    }
+
+    function playQuestion(){
+      reloadOpts();
+      if(!started){
+        setQuestion();
+        started = true;
+      }
+      if(!heared){
+        lastheared = new Date().getTime();
+        heared = true;
+      }
+      setTimeout(()=>(playTone(tone, 300)), 0);
+    }
+
+
+
+    function playTone(tone, length){
+      let o = ocillator[opts.inst](tone, length);
+      o.start();
+      setTimeout(()=>(o.stop()), length+100);
+    }
+
+    function testInst(){
+      reloadOpts();
+      playTone(Math.random()*12, 300);
+    }
+  </script>
+
+</body>
+</html>

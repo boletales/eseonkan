@@ -28,6 +28,18 @@
 .black_key.selected_key{
   background-color: #00a;
 }
+.white_key.answer_key{
+  background-color: #afa;
+}
+.black_key.answer_key{
+  background-color: #0a0;
+}
+.white_key.selected_key.answer_key{
+  background-color: #aff;
+}
+.black_key.selected_key.answer_key{
+  background-color: #0aa;
+}
 .octave_white{
   width: fit-content;
   display: flex;

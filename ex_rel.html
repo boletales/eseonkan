@@ -25,7 +25,8 @@
   <div id="options">
     <ul>
       <li><input type="radio" name="opt_seq" id="opt_useq" checked><label for="opt_useq">低→高の順に鳴らす</label> <input type="radio" name="opt_seq" id="opt_rseq"><label for="opt_rseq">二音の順をランダムにする</label></li>
-      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" checked onclick="testInst();"><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B" onclick="testInst();"><label for="opt_instB">B</label></li>
+      <li><input type="radio" name="opt_int" id="opt_int_all" value="all"><label for="opt_int_all">ぜんぶ</label> <input type="radio" name="opt_int" id="opt_int_m3" value="m3"><label for="opt_int_m3">短三度</label> <input type="radio" name="opt_int" id="opt_int_M3" checked value="M3"><label for="opt_int_M3">長三度</label> <input type="radio" name="opt_int" id="opt_int_M6" value="M6"><label for="opt_int_M6">長六度</label> <input type="radio" name="opt_int" id="opt_int_M7" value="M7"><label for="opt_int_M7">長七度</label></li>
+      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" onclick="testInst();" checked><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B" onclick="testInst();"><label for="opt_instB">B</label></li>
       <li><a id="tweet">挑戦中！（残り10問）</a></li>
     </ul>
   </div>
@@ -39,7 +40,7 @@
   <script src="./tone.js" charset="utf-8"></script>
   <script>
 
-    let toneA, toneB, intervalid, offset, rev;
+    let toneA, toneB, isjust, intervalid, offset, rev;
     let toneA_, toneB_, offset_;
     let total   = 0;
     let correct = 0;
@@ -52,6 +53,7 @@
 
     let opts = {
         inst:  "A"
+      , int: "all"
       , rseq: false
       , chord: false
     };
@@ -60,8 +62,11 @@
       opts = {
           rseq:  document.getElementById("opt_rseq").checked
         , inst:  Array.from(document.getElementsByName("opt_inst")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
+        , int:  Array.from(document.getElementsByName("opt_int")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
       }
     }
+
+    Array.from(document.getElementsByName("opt_int")).forEach(i => i.onclick = ()=>{if(!heared){setQuestion();}});
 
     let tonename = [
         "A"
@@ -79,47 +84,40 @@
     ];
 
     let tones = [
-      //  {name: "短二(平)", tone: 2**( 1/12)}
-      //, {name: "長二(平)", tone: 2**( 2/12)}
-        {name: "短三(平)", tone: 2**( 3/12)}
-      , {name: "長三(平)", tone: 2**( 4/12)}
-      //, {name: "完四(平)", tone: 2**( 5/12)}
-      //, {name: "増四(平)", tone: 2**( 6/12)}
-      //, {name: "完五(平)", tone: 2**( 7/12)}
-      //, {name: "短六(平)", tone: 2**( 8/12)}
-      , {name: "長六(平)", tone: 2**( 9/12)}
-      //, {name: "短七(平)", tone: 2**(10/12)}
-      , {name: "長七(平)", tone: 2**(11/12)}
-      , {name: "短三(純)", tone: 6/5}
-      , {name: "長三(純)", tone: 5/4}
-      //, {name: "完四(純)", tone: 4/3}
-      //, {name: "完五(純)", tone: 3/2}
-      , {name: "長六(純)", tone: 5/3}
-      , {name: "長七(純)", tone: 15/8}
-      //, {name: "完八(純)", tone: 2/1}
-    ]
+      [
+        {name: "短三(平)", tone: 2**( 3/12)},
+        {name: "短三(純)", tone: 6/5},
+      ],[
+        {name: "長三(平)", tone: 2**( 4/12)},
+        {name: "長三(純)", tone: 5/4},
+      ],[
+        {name: "長六(平)", tone: 2**( 9/12)},
+        {name: "長六(純)", tone: 5/3},
+      ],[
+        {name: "長七(平)", tone: 2**(11/12)},
+        {name: "長七(純)", tone: 15/8},
+      ]
+    ];
 
-    let buttons = tones.map((c,i)=>{
+    let buttons = tones.map((x, j)=>x.map((c,i)=>{
       let b = document.createElement("input");
       b.type = "button";
       b.value = "(+" + ((Math.log(c.tone)/Math.log(2)*12).toFixed(2)) + ") " + c.name;
       b.onclick = ()=>{
         if(heared){
-          buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+          buttons.forEach(x => x.forEach(b => {b.style.backgroundColor = b.disabled ? "#ddd" : "#fff"}));
           b.style.backgroundColor = "#faa";
-          answer(i);
+          answer(i, j);
         }
       };
       b.style.backgroundColor = "#fff";
       return b;
-    });
+    }));
 
-    for(let i=0; i<buttons.length; i++){
-      document.getElementById("answer").appendChild(buttons[i]);
-      if(i==3){
-        document.getElementById("answer").appendChild(document.createElement("br"));
-      }
-    }
+    buttons.forEach((bs,i)=>{
+      bs.forEach(b=>document.getElementById("answer").appendChild(b));
+      if(i!=buttons.length-1) document.getElementById("answer").appendChild(document.createElement("br"));
+    })
 
     //let info2 = document.createElement("span");
     //info2.id = "info2";
@@ -142,18 +140,21 @@
       toneB_  = toneB;
       offset_ = offset;
       toneA  = Math.floor(Math.random()*12);
-      intervalid = Math.floor(Math.random()*tones.length);
-      toneB  = toneA + Math.log(tones[intervalid].tone)/Math.log(2)*12;
+      intervalid = ["m3", "M3", "M6", "M7"].indexOf(opts.int);
+      if(intervalid == -1){
+        intervalid = Math.floor(Math.random()*tones.length);
+      }
+      buttons.forEach((c, i)=>c.forEach(b=>b.disabled = (i != intervalid)));
+      isjust = Math.round(Math.random());
+      toneB  = toneA + Math.log(tones[intervalid][isjust].tone)/Math.log(2)*12;
       offset = Math.random() - 0.5;
       rev    = opts.rseq && Math.random() > 0.5;
-
-      buttons.forEach((c,i)=>{c.disabled = false});
     }
 
-    function answer(diff){
+    function answer(diff, just){
       reloadOpts();
       total++;
-      if(intervalid == diff){
+      if(intervalid == diff && isjust == just){
         correct++;
       }
 
@@ -161,7 +162,7 @@
       times.push(new Date().getTime() - lastheared);
       totaltime += times[times.length-1]/1000;
 
-      buttons[intervalid].style.backgroundColor = "#afa";
+      buttons[intervalid][isjust].style.backgroundColor = "#afa";
       document.getElementById("info").innerText = correct + " / " + total + "　" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒";
       //document.getElementById("info2").innerText = opts.tone ? " " + tonename[toneA%12] + ", " + tonename[toneB%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")" : "";
       document.getElementById("replay").value = tonename[toneA%12] + ", " + tonename[Math.round(toneB)%12] + "  " +"(" + (offset<0 ? "-" : "+" ) + Math.abs(offset).toFixed(2) + ")";
@@ -195,7 +196,7 @@
         lastheared = new Date().getTime();
         heared = true;
       }
-      buttons.forEach(b => {b.style.backgroundColor = "#fff"});
+      buttons.forEach(x => x.forEach(b => {b.style.backgroundColor = b.disabled ? "#ddd" : "#fff"}));
       if(rev){
         setTimeout(()=>(playTone(toneB+offset, 480)), 0);
         setTimeout(()=>(playTone(toneA+offset, 480)), opts.chord ? 0 : 500);
