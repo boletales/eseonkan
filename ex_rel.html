@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>エセ相対音感ふるいおとしテストEX</title>
+  <title>相対音感テストEX</title>
   <style>
     .twitter-share-button{
       vertical-align: text-top
@@ -17,7 +17,7 @@
   <div id="answer"></div>
   <div id="play"><input type="button" value="Play" onclick="playQuestion();"></div>
 
-  <h2>エセ相対音感ふるいおとしテストEX</h2>
+  <h2>相対音感テストEX</h2>
   <p>
     Playボタンを押して、聞こえた二音の音程が平均律か純正律かを聞き分けてください。このテストでは絶対音感でズルができないように、チューニングが一問ごとに変更されます。
   </p>
@@ -174,7 +174,7 @@
         document.getElementById("tweet").innerText = "完了！（"+  "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" + "）";
         document.getElementById("tweet").href =
           "https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Eshare%7Ctwgr%5E&text=" + encodeURIComponent(
-            "わたしは #エセ相対音感ふるいおとしテストEX で、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
+            "わたしは #相対音感テストEX で、" + (totaltime.toFixed(2)) + "秒かけて" +total+"問中"+correct+"問に正解しました！" + "（" + "正答率：" + (correct/total*100).toFixed(0) + "%" + "　" + "平均回答時間：" + (totaltime/times.length).toFixed(2) + "秒" 
             + (optdata => optdata.length==0 ? "" : "　オプション：" + optdata.join("・"))([[opts.rseq, "順序ランダム"], [opts.chord, "二音同時"]].filter(x=>x[0]).map(x=>x[1])) + "）" + "\n"
           ) + "&url=https%3A%2F%2Faquamarine-unicorn-20dc6d.netlify.app%2Fex_rel.html";
       }
