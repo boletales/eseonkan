@@ -99,7 +99,7 @@
       ]
     ];
 
-    let buttons = tones.map((x, j)=>x.map((c,i)=>{
+    let buttons = tones.map((x,i)=>x.map((c,j)=>{
       let b = document.createElement("input");
       b.type = "button";
       b.value = "(+" + ((Math.log(c.tone)/Math.log(2)*12).toFixed(2)) + ") " + c.name;
