@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="piano.css" rel="stylesheet">
+  <title>ピアノ</title>
+  <style>
+    .range{
+      vertical-align: text-bottom;
+      width: 30%;
+    }
+    #answer_button{
+      font-size: 100%;
+    }
+    #answer_button{
+      font-size: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="answer">
+    <div id="piano_parent">
+    </div>
+  </div>
+
+
+  <div id="options">
+    <ul>
+      <li>音色：<input type="radio" name="opt_inst" id="opt_instA" value="A" checked><label for="opt_instA">A</label> <input type="radio" name="opt_inst" id="opt_instB" value="B"><label for="opt_instB">B</label></li>
+    </ul>
+  </div>
+
+  <h2>ほかのおもちゃ</h2>
+  <ul>
+    <li><a href="./">エセ相対音感ふるいおとしテスト</a></li>
+    <li><a href="./ex_rel.html">エセ相対音感ふるいおとしテストEX</a></li>
+    <li><a href="./pitch.html">音叉人間養成ギプス</a></li>
+  </ul>
+
+  <script src="./piano.js" charset="utf-8"></script>
+  <script>
+    const ctx = new AudioContext();
+    let globalGain = ctx.createGain();
+    globalGain.connect(ctx.destination);
+    globalGain.gain.value = 0.1;
+
+    let wave = {
+      sine : ctx.createPeriodicWave(
+        [0,1]
+        ,[0,0]
+      )
+    , test : ctx.createPeriodicWave(
+        [0,120,48,12,2,1,1]
+        ,[0,  0, 0, 0,0,0,1]
+      )
+    };
+    
+    let gainOn = () => {
+      let g = ctx.createGain();
+      g.connect(globalGain);
+      g.gain.setValueAtTime              (0.0 , ctx.currentTime);
+      g.gain.linearRampToValueAtTime     (1.0 , ctx.currentTime + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.5 , ctx.currentTime + 0.02);
+      return g;
+    }
+
+    let gainOff = (g, t) => {
+      g.gain.setValueAtTime              (0.5 , ctx.currentTime);
+      g.gain.linearRampToValueAtTime     (0 , ctx.currentTime + t);
+    }
+
+    let release = 0.1;
+
+    let makeInstrument = (wavearr) => ((tone) => {
+      let g = gainOn();
+      let o = ctx.createOscillator();
+      o.setPeriodicWave(wave.sine);
+      o.frequency.setValueAtTime(toneToFreq(tone), ctx.currentTime);
+      o.connect(g);
+      return {ocillator:o, stop:()=>{
+          gainOff(g, release);
+          o.stop(ctx.currentTime + release + 0.01)
+        }};
+    });
+
+    let ocillator = {
+        A : makeInstrument(wave.sine)
+      , B : makeInstrument(wave.test)
+    };
+
+    let opts = {
+        inst:  "A"
+    };
+
+    function reloadOpts(){
+      opts = {
+          inst:  Array.from(document.getElementsByName("opt_inst")).reduce((p, c) => (p==undefined && c.checked ? c.value : p), undefined)
+      }
+    }
+
+    let tonename = [
+        "A"
+      , "A#"
+      , "B"
+      , "C"
+      , "C#"
+      , "D"
+      , "D#"
+      , "E"
+      , "F"
+      , "F#"
+      , "G"
+      , "G#"
+    ];
+
+    let keys = generatePiano(
+        document.getElementById("piano_parent")
+      , 1
+      , (keyid, keys) => {
+        /*
+        selectedKey = keyid;
+        keys.forEach((k, i) => {
+          if(i==keyid){
+            k.classList.add("selected_key");
+          }else{
+            k.classList.remove("selected_key");
+          }
+        });
+        changeNote();
+        */
+      }
+    );
+
+    function toneToFreq(tone){
+      return 440 * (2 ** ((tone) / 12));
+    }
+    
+    chordsModState = {
+        "7" : false
+      };
+    
+    scale = 3;
+
+    function keyToCommand(key){
+      const btoc = "fgyhujkolp;@:]".split("");
+      const chords = {
+          "I"    : [0 , 4 , 7 ],
+          "IV"   : [5 , 9 , 0 ],
+          "V"    : [7 , 11, 2 ],
+          "VIm"  : [0 , 4 , 9 ],
+          "IIm"  : [2 , 5 , 9 ],
+          "IIIm" : [4 , 7 , 11],
+        };
+      const keyToChord = {
+        "a" : "I"   ,
+        "s" : "IV"  ,
+        "d" : "V"   ,
+        "q" : "VIm" ,
+        "w" : "IIm" ,
+        "e" : "IIIm",
+      }
+      
+      if(btoc.includes(key)){
+        return {
+            type: "tone"
+          , tone: btoc.indexOf(key) -1
+        };
+      }else if(Object.keys(keyToChord).includes(key)){
+        return {
+            type: "chord"
+          , name: key
+          , tones: chords[keyToChord[key]]
+        };
+      }
+    }
+  
+    let chordnow;
+
+    function onKey(e){
+      if(e.repeat)  return;
+      let cmd = keyToCommand(e.key, true);
+      if(cmd){
+        switch(cmd.type){
+          case "tone":
+            startTone(cmd.tone + scale);
+            break;
+          case "chord":
+            chordnow = cmd.name;
+            startChord(cmd.tones.map(t => t + scale));
+            break;
+        }
+      }
+    }
+
+    function offKey(e){
+      let cmd = keyToCommand(e.key, false);
+      if(cmd){
+        switch(cmd.type){
+          case "tone":
+            stopTone(cmd.tone+ scale);
+            break;
+          case "chord":
+            if(chordnow == cmd.name) stopChord();
+            break;
+        }
+      }
+    }
+
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("keyup", offKey);
+
+    let toneOcilators = {};
+
+    function startTone(tone){
+      stopTone(tone);
+      let o = ocillator[opts.inst](tone);
+      o.ocillator.start();
+      toneOcilators[tone] = o;
+    }
+
+    function stopTone(tone){
+      if(toneOcilators[tone]){
+        toneOcilators[tone].stop();
+        delete toneOcilators[tone];
+      }
+    }
+
+    let chordOcilators = [];
+
+    function startChord(tones){
+      stopChord();
+      tones.forEach(tone => {
+        let o = ocillator[opts.inst](tone);
+        o.ocillator.start();
+        chordOcilators.push(o);
+      })
+    }
+
+    function stopChord(){
+      chordOcilators.forEach(o => {
+        o.stop();
+      });
+      chordOcilators = [];
+    }
+
+
+
+    
+  </script>
+
+</body>
+</html>
